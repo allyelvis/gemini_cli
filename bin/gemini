@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# Load configuration
+source "$HOME/gemini_cli/config"
+
+# Check if the API key is available
+if [ -z "$GEMINI_API_KEY" ]; then
+  echo "API key not found. Please set your API key in the config file."
+  exit 1
+fi
+
+# Define functions for core commands
+function generate_code() {
+  prompt="$1"
+  curl -X POST "https://api.gemini.com/v1/code/generate" \
+    -H "Authorization: Bearer $GEMINI_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d "{\"prompt\": \"$prompt\"}" | jq '.response'
+}
+
+function explain_code() {
+  code_snippet="$1"
+  curl -X POST "https://api.gemini.com/v1/code/explain" \
+    -H "Authorization: Bearer $GEMINI_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d "{\"code\": \"$code_snippet\"}" | jq '.response'
+}
+
+function debug_code() {
+  code_snippet="$1"
+  curl -X POST "https://api.gemini.com/v1/code/debug" \
+    -H "Authorization: Bearer $GEMINI_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d "{\"code\": \"$code_snippet\"}" | jq '.response'
+}
+
+# Parse CLI arguments
+case "$1" in
+  generate)
+    shift
+    generate_code "$@"
+    ;;
+  explain)
+    shift
+    explain_code "$@"
+    ;;
+  debug)
+    shift
+    debug_code "$@"
+    ;;
+  *)
+    echo "Usage: gemini [command] [args]"
+    echo "Commands:"
+    echo "  generate <prompt>    Generate code based on the prompt"
+    echo "  explain <code>       Explain a code snippet"
+    echo "  debug <code>         Debug a code snippet"
+    exit 1
+    ;;
+esac
